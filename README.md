@@ -29,9 +29,70 @@ obsidian --version
 
 ---
 
+## API キーの取得・設定と obsidian-cli の実行手順
+
+`obsidian-cli` は Obsidian の **Local REST API** プラグインを通じて Obsidian を操作します。
+以下の手順で API キーを取得し、環境変数に設定してから `obsidian-cli` を実行してください。
+
+### ステップ 1: Local REST API プラグインのインストール
+
+`setup.sh` を実行すると Local REST API プラグインが自動でインストールされます（後述の「おすすめプラグインのセットアップ」参照）。
+
+手動でインストールする場合は、Obsidian の以下の手順に従ってください。
+
+1. Obsidian を開き、**Settings（設定）** > **Community plugins** を開きます。
+2. **「Turn on community plugins」** を有効にします（初回のみ）。
+3. **「Browse」** をクリックし、`Local REST API` を検索してインストールします。
+4. インストール後、**「Enable」** をクリックしてプラグインを有効化します。
+
+### ステップ 2: API キーの取得
+
+1. Obsidian の **Settings** > **Community plugins** で **Local REST API** の歯車アイコン（⚙）をクリックします。
+2. **「API Key」** 欄に表示されている文字列をコピーします。
+   - キーが空の場合は **「Regenerate API Key」** をクリックしてキーを生成してください。
+
+### ステップ 3: 環境変数の設定
+
+取得した API キーを環境変数 `OBSIDIAN_API_KEY` に設定します。
+シェルの設定ファイル（`~/.bashrc`、`~/.zshrc` など）に以下を追記して、ターミナル起動時に自動で読み込まれるようにします。
+
+```bash
+# ~/.bashrc または ~/.zshrc に追記
+export OBSIDIAN_API_KEY="ここに取得したAPIキーを貼り付ける"
+```
+
+追記後、設定を反映します。
+
+```bash
+# bash の場合
+source ~/.bashrc
+
+# zsh の場合
+source ~/.zshrc
+```
+
+### ステップ 4: obsidian-cli の実行
+
+環境変数が設定されていれば、以下のように `obsidian-cli` コマンドを実行できます。
+
+```bash
+# デイリーノートを開く
+obsidian daily
+
+# ノートを開く
+obsidian open "ノートのタイトル"
+```
+
+> **注意:** `OBSIDIAN_API_KEY` が設定されていない場合は、`-apikey` オプションで直接指定することもできます。
+> ```bash
+> obsidian daily -apikey "your-api-key-here"
+> ```
+
+---
+
 ## おすすめプラグインのセットアップ
 
-以下のスクリプトを実行すると、AIエージェントのタスク管理に適した推奨プラグイン（最大10個）を自動でインストール・有効化します。
+以下のスクリプトを実行すると、AIエージェントのタスク管理に適した推奨プラグインを自動でインストール・有効化します。
 
 ```bash
 # Obsidian ボルトのパスを指定してセットアップスクリプトを実行
@@ -61,6 +122,7 @@ AIエージェントへのタスク管理に特化した以下のプラグイン
 | 8 | **Tag Wrangler** | タスクカテゴリのタグ一括管理 |
 | 9 | **Obsidian Git** | タスクノートのバージョン管理・自動バックアップ |
 | 10 | **Advanced Tables** | タスクリストを表形式で見やすく管理 |
+| 11 | **Local REST API** | obsidian-cli から Obsidian を API 経由で操作するための REST API サーバー |
 
 ---
 

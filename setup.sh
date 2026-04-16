@@ -2,7 +2,7 @@
 # setup.sh — Obsidian プラグイン自動インストール・有効化スクリプト
 # 使用法: bash setup.sh <vault-path>
 #
-# AIエージェントへのタスク管理用 推奨プラグイン（最大10個）を
+# AIエージェントへのタスク管理用 推奨プラグインを
 # 指定した Obsidian ボルトにインストールし、有効化します。
 
 set -euo pipefail
@@ -53,6 +53,7 @@ PLUGINS=(
   "tag-wrangler|pjeby/tag-wrangler"
   "obsidian-git|denolehov/obsidian-git"
   "advanced-tables-obsidian|tgrosinger/advanced-tables-obsidian"
+  "obsidian-local-rest-api|coddingtonbear/obsidian-local-rest-api"
 )
 
 # ───────────────────────────────────────────────
