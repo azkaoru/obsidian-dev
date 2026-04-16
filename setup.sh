@@ -47,7 +47,7 @@ PLUGINS=(
   "dataview|blacksmithgu/obsidian-dataview"
   "templater-obsidian|SilentVoid13/Templater"
   "quickadd|chhoumann/quickadd"
-  "obsidian-kanban|mgmeyers/obsidian-kanban"
+  "obsidian-shellcommands|Taitava/obsidian-shellcommands"
   "periodic-notes|liamcain/obsidian-periodic-notes"
   "calendar|liamcain/obsidian-calendar-plugin"
   "tag-wrangler|pjeby/tag-wrangler"
@@ -169,5 +169,6 @@ for id in "${INSTALLED_IDS[@]}"; do
   echo "   - $id"
 done
 echo ""
-echo "⚠️  Obsidian アプリを再起動してプラグインを反映してください。"
-echo "    設定 > コミュニティプラグイン > 各プラグインをオンにしてください。"
+echo "ℹ️  Obsidian アプリを再起動してプラグインを反映してください。"
+echo "   プラグインは community-plugins.json に登録済みのため、"
+echo "   再起動後に自動で有効化されます。"
