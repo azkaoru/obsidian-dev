@@ -33,6 +33,24 @@ COMMUNITY_PLUGINS_JSON="$CONFIG_DIR/community-plugins.json"
 mkdir -p "$PLUGINS_DIR"
 mkdir -p "$CONFIG_DIR"
 
+# ───────────────────────────────────────────────
+# ボルト内ディレクトリ構成の作成
+# ───────────────────────────────────────────────
+VAULT_DIRS=(
+  "00_Inbox"
+  "10_Daily"
+  "20_Tasks"
+  "30_Projects"
+  "40_Templates"
+  "90_Archive"
+)
+
+echo "▶ ボルト内ディレクトリを作成しています..."
+for dir in "${VAULT_DIRS[@]}"; do
+  mkdir -p "$VAULT_DIR/$dir"
+  echo "  ✅ $dir"
+done
+
 echo "========================================"
 echo " Obsidian プラグインセットアップ開始"
 echo " ボルト: $VAULT_DIR"
@@ -48,6 +66,7 @@ PLUGINS=(
   "templater-obsidian|SilentVoid13/Templater"
   "quickadd|chhoumann/quickadd"
   "periodic-notes|liamcain/obsidian-periodic-notes"
+  "calendar|liamcain/obsidian-calendar-plugin"
   "obsidian-local-rest-api|coddingtonbear/obsidian-local-rest-api"
 )
 
