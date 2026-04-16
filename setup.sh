@@ -47,12 +47,7 @@ PLUGINS=(
   "dataview|blacksmithgu/obsidian-dataview"
   "templater-obsidian|SilentVoid13/Templater"
   "quickadd|chhoumann/quickadd"
-  "obsidian-shellcommands|Taitava/obsidian-shellcommands"
   "periodic-notes|liamcain/obsidian-periodic-notes"
-  "calendar|liamcain/obsidian-calendar-plugin"
-  "tag-wrangler|pjeby/tag-wrangler"
-  "obsidian-git|denolehov/obsidian-git"
-  "advanced-tables-obsidian|tgrosinger/advanced-tables-obsidian"
   "obsidian-local-rest-api|coddingtonbear/obsidian-local-rest-api"
 )
 
