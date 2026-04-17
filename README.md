@@ -87,6 +87,43 @@ obsidian open "ノートのタイトル"
 
 ---
 
+## ボルト構成
+
+`setup.sh` を実行すると、以下のディレクトリ構成がボルト直下に自動作成されます。
+
+```
+ObsidianNotes/
+├── activityJournals/  # ざっくり書き出す用（日次メモ・Calendar プラグインと連携）
+├── thoughtSpace/      # がっつり考える用（テーマ別の深掘りメモ）
+├── knowledge/         # 見返す用（参照したメモを形式知としてまとめる場所）
+├── _templates/        # テンプレートファイル（DailyNotesTemplate.md など）
+├── _assets/
+│   └── images/        # 画像・PDF などの添付リソース
+└── .obsidian/         # Obsidian 設定・プラグイン（自動生成）
+```
+
+### 各ディレクトリの役割
+
+| ディレクトリ | 用途 |
+|---|---|
+| `activityJournals` | 日次でメモを分けて記録する場所。とにかくまず書き出すための受け皿。Calendar プラグインで日別ファイルを素早く作成できる |
+| `thoughtSpace` | 特定のテーマについて深く思考を巡らせるためのメモ置き場。日を跨ぐような深い考察のみを置く |
+| `knowledge` | 実際に参照したメモを整理し、形式知として蓄積するための場所 |
+| `_templates` | Obsidian の Templates / Daily Notes プラグインが使用するテンプレートファイル |
+| `_assets/images` | ノートに貼り付けた画像・PDF などの添付ファイルを一元管理 |
+
+### 自動生成される Obsidian 設定
+
+`setup.sh` 実行時に `.obsidian/` 配下の設定ファイルも自動で生成されます。
+
+| 設定ファイル | 内容 |
+|---|---|
+| `app.json` | 新規ノートを現在のフォルダに作成 / 添付ファイルを `_assets/images/` に集約 / Backlinks を有効化 |
+| `daily-notes.json` | Daily Notes の保存先を `activityJournals/YYYY/MM/DD/`、テンプレートを `_templates/DailyNotesTemplate.md` に設定 |
+| `templates.json` | テンプレートフォルダを `_templates/` に設定 |
+
+---
+
 ## おすすめプラグインのセットアップ
 
 以下のスクリプトを実行すると、AIエージェントのタスク管理に適した推奨プラグインを自動でインストール・有効化します。
@@ -114,7 +151,8 @@ AIエージェントへのタスク管理に特化した以下のプラグイン
 | 3 | **Templater** | タスク作成用テンプレートの自動化 |
 | 4 | **QuickAdd** | ショートカットからタスクを素早く追加 |
 | 5 | **Periodic Notes** | デイリー/ウィークリーノートでのタスク記録 |
-| 6 | **Local REST API** | obsidian-cli から Obsidian を API 経由で操作するための REST API サーバー |
+| 6 | **Calendar** | カレンダーUIでデイリーノートへ素早くアクセス |
+| 7 | **Local REST API** | obsidian-cli から Obsidian を API 経由で操作するための REST API サーバー |
 
 ---
 
@@ -126,7 +164,7 @@ AIエージェントへのタスク管理に特化した以下のプラグイン
 |---|---|---|
 | **① タスク定義・追跡** | Tasks, Dataview | AIエージェントへの依頼をタスクとして記録し、期限・ステータスをクエリで集計する中核機能 |
 | **② 入力の効率化** | Templater, QuickAdd | タスク登録テンプレートやホットキーで、依頼内容を素早く定型フォーマットで記録 |
-| **③ 時間軸での整理** | Periodic Notes | デイリー/ウィークリーノートで、日付ごとのタスク進捗を管理 |
+| **③ 時間軸での整理** | Periodic Notes, Calendar | デイリー/ウィークリーノートで、日付ごとのタスク進捗を管理。Calendar UI で素早くナビゲート |
 | **④ CLI 連携** | Local REST API | obsidian-cli が Obsidian を API 経由で操作するために必須 |
 
 ---
