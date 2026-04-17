@@ -37,12 +37,11 @@ mkdir -p "$CONFIG_DIR"
 # ボルト内ディレクトリ構成の作成
 # ───────────────────────────────────────────────
 VAULT_DIRS=(
-  "00_Inbox"
-  "10_Daily"
-  "20_Tasks"
-  "30_Projects"
-  "40_Templates"
-  "90_Archive"
+  "activityJournals"
+  "thoughtSpace"
+  "knowledge"
+  "_templates"
+  "_assets/images"
 )
 
 echo "▶ ボルト内ディレクトリを作成しています..."
@@ -50,6 +49,98 @@ for dir in "${VAULT_DIRS[@]}"; do
   mkdir -p "$VAULT_DIR/$dir"
   echo "  ✅ $dir"
 done
+
+# ───────────────────────────────────────────────
+# デイリーノートテンプレートの作成
+# ───────────────────────────────────────────────
+TEMPLATE_FILE="$VAULT_DIR/_templates/DailyNotesTemplate.md"
+if [ ! -f "$TEMPLATE_FILE" ]; then
+  cat > "$TEMPLATE_FILE" << 'EOF'
+---
+tags:
+  - "#journal"
+  - "#journal/daily"
+date: "{{date:YYYY-MM-DD}}"
+---
+# 🗒️ {{date:YYYY-MM-DD(ddd)}} Journal
+
+## ⏱️ Timeline
+- 08:00 xx
+
+## ✅ 今日のTODO
+- [ ] 
+
+
+## 雑記
+
+### ✨ 気づき／学び
+- 
+### 🚧 課題／懸念
+- 
+### 💭 振り返り・感想 (YWT:やった・わかった・つぎにやる)
+- **Y** (Timelineに書くので省略)
+- **W**  
+- **T**
+EOF
+  echo "  ✅ _templates/DailyNotesTemplate.md を作成しました"
+else
+  echo "  ℹ️  _templates/DailyNotesTemplate.md は既に存在します。スキップします"
+fi
+
+# ───────────────────────────────────────────────
+# Obsidian 設定ファイルの生成
+# ───────────────────────────────────────────────
+echo ""
+echo "▶ Obsidian 設定ファイルを生成しています..."
+
+# app.json — Files & Links 設定
+APP_JSON="$CONFIG_DIR/app.json"
+existing_app="{}"
+if [ -f "$APP_JSON" ]; then
+  if jq -e . "$APP_JSON" &>/dev/null; then
+    existing_app=$(cat "$APP_JSON")
+  else
+    echo "  ⚠️  app.json の JSON が不正です。初期化して続行します"
+  fi
+fi
+echo "$existing_app" | jq '. + {
+  "newFileLocation": "current",
+  "attachmentFolderPath": "_assets/images",
+  "showBacklinksAtBottom": true
+}' > "$APP_JSON"
+echo "  ✅ app.json (Files & Links / Backlinks 設定)"
+
+# daily-notes.json — Daily Notes 設定
+DAILY_NOTES_JSON="$CONFIG_DIR/daily-notes.json"
+existing_dn="{}"
+if [ -f "$DAILY_NOTES_JSON" ]; then
+  if jq -e . "$DAILY_NOTES_JSON" &>/dev/null; then
+    existing_dn=$(cat "$DAILY_NOTES_JSON")
+  else
+    echo "  ⚠️  daily-notes.json の JSON が不正です。初期化して続行します"
+  fi
+fi
+echo "$existing_dn" | jq '. + {
+  "folder": "activityJournals",
+  "format": "YYYY/MM/DD/YYYY-MM-DD",
+  "template": "_templates/DailyNotesTemplate.md"
+}' > "$DAILY_NOTES_JSON"
+echo "  ✅ daily-notes.json (Daily Notes 設定)"
+
+# templates.json — Templates 設定
+TEMPLATES_JSON="$CONFIG_DIR/templates.json"
+existing_tmpl="{}"
+if [ -f "$TEMPLATES_JSON" ]; then
+  if jq -e . "$TEMPLATES_JSON" &>/dev/null; then
+    existing_tmpl=$(cat "$TEMPLATES_JSON")
+  else
+    echo "  ⚠️  templates.json の JSON が不正です。初期化して続行します"
+  fi
+fi
+echo "$existing_tmpl" | jq '. + {
+  "folder": "_templates"
+}' > "$TEMPLATES_JSON"
+echo "  ✅ templates.json (Templates 設定)"
 
 echo "========================================"
 echo " Obsidian プラグインセットアップ開始"

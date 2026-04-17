@@ -92,26 +92,35 @@ obsidian open "ノートのタイトル"
 `setup.sh` を実行すると、以下のディレクトリ構成がボルト直下に自動作成されます。
 
 ```
-MyVault/
-├── 00_Inbox/        # 未分類・受信トレイ（新規ノートの一時置き場）
-├── 10_Daily/        # デイリーノート（Periodic Notes / Calendar プラグインと連携）
-├── 20_Tasks/        # タスクノート（Tasks プラグインで管理）
-├── 30_Projects/     # プロジェクトノート（AIエージェントへの依頼単位で管理）
-├── 40_Templates/    # テンプレートファイル（Templater プラグインで使用）
-├── 90_Archive/      # 完了・不要になったノートのアーカイブ
-└── .obsidian/       # Obsidian 設定・プラグイン（自動生成）
+ObsidianNotes/
+├── activityJournals/  # ざっくり書き出す用（日次メモ・Calendar プラグインと連携）
+├── thoughtSpace/      # がっつり考える用（テーマ別の深掘りメモ）
+├── knowledge/         # 見返す用（参照したメモを形式知としてまとめる場所）
+├── _templates/        # テンプレートファイル（DailyNotesTemplate.md など）
+├── _assets/
+│   └── images/        # 画像・PDF などの添付リソース
+└── .obsidian/         # Obsidian 設定・プラグイン（自動生成）
 ```
 
 ### 各ディレクトリの役割
 
 | ディレクトリ | 用途 |
 |---|---|
-| `00_Inbox` | 未整理のノートや思いついたアイデアを即座に記録する受信トレイ |
-| `10_Daily` | Periodic Notes と Calendar プラグインによるデイリー/ウィークリーノート |
-| `20_Tasks` | AIエージェントへの依頼タスクを Tasks プラグインで記録・追跡 |
-| `30_Projects` | タスクをプロジェクト単位でまとめたノート群 |
-| `40_Templates` | Templater で使用するテンプレートファイル |
-| `90_Archive` | 完了・クローズしたノートの保管場所 |
+| `activityJournals` | 日次でメモを分けて記録する場所。とにかくまず書き出すための受け皿。Calendar プラグインで日別ファイルを素早く作成できる |
+| `thoughtSpace` | 特定のテーマについて深く思考を巡らせるためのメモ置き場。日を跨ぐような深い考察のみを置く |
+| `knowledge` | 実際に参照したメモを整理し、形式知として蓄積するための場所 |
+| `_templates` | Obsidian の Templates / Daily Notes プラグインが使用するテンプレートファイル |
+| `_assets/images` | ノートに貼り付けた画像・PDF などの添付ファイルを一元管理 |
+
+### 自動生成される Obsidian 設定
+
+`setup.sh` 実行時に `.obsidian/` 配下の設定ファイルも自動で生成されます。
+
+| 設定ファイル | 内容 |
+|---|---|
+| `app.json` | 新規ノートを現在のフォルダに作成 / 添付ファイルを `_assets/images/` に集約 / Backlinks を有効化 |
+| `daily-notes.json` | Daily Notes の保存先を `activityJournals/YYYY/MM/DD/`、テンプレートを `_templates/DailyNotesTemplate.md` に設定 |
+| `templates.json` | テンプレートフォルダを `_templates/` に設定 |
 
 ---
 
