@@ -191,35 +191,6 @@ echo "$existing_tmpl" | jq '. + {
 }' >"$TEMPLATES_JSON"
 echo "  ✅ templates.json (Templates 設定)"
 
-# vscode-editor の data.json — 対応拡張子に sh を追加
-VSCODE_EDITOR_DATA_JSON="$PLUGINS_DIR/vscode-editor/data.json"
-existing_vscode='{}'
-if [ -f "$VSCODE_EDITOR_DATA_JSON" ]; then
-	if jq -e . "$VSCODE_EDITOR_DATA_JSON" &>/dev/null; then
-		existing_vscode=$(cat "$VSCODE_EDITOR_DATA_JSON")
-	else
-		echo "  ⚠️  vscode-editor/data.json の JSON が不正です。初期化して続行します"
-	fi
-fi
-# extensions が未設定の場合はデフォルト＋sh を設定、設定済みの場合は sh を追加
-echo "$existing_vscode" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-default_ext = ['ts','js','py','css','c','cpp','go','rs','java','lua','php','cs','sh']
-exts = data.get('extensions', default_ext)
-if 'sh' not in exts:
-    exts.append('sh')
-data['extensions'] = exts
-# デフォルト設定がない場合は補完
-data.setdefault('folding', True)
-data.setdefault('lineNumbers', True)
-data.setdefault('wordWrap', True)
-data.setdefault('minimap', True)
-data.setdefault('themeColor', 'AUTO')
-data.setdefault('fontSize', 14)
-print(json.dumps(data, indent=2, ensure_ascii=False))
-" >"$VSCODE_EDITOR_DATA_JSON"
-echo "  ✅ vscode-editor/data.json (対応拡張子: sh 追加)"
 
 # quickadd の data.json — 新規タスク作成マクロを登録
 QUICKADD_DATA_JSON="$PLUGINS_DIR/quickadd/data.json"
@@ -391,6 +362,36 @@ for id in "${INSTALLED_IDS[@]}"; do
 		new_list=$(echo "$new_list" | jq -r --arg id "$id" '. + [$id]')
 	fi
 done
+
+# vscode-editor の data.json — 対応拡張子に sh を追加
+VSCODE_EDITOR_DATA_JSON="$PLUGINS_DIR/vscode-editor/data.json"
+existing_vscode='{}'
+if [ -f "$VSCODE_EDITOR_DATA_JSON" ]; then
+	if jq -e . "$VSCODE_EDITOR_DATA_JSON" &>/dev/null; then
+		existing_vscode=$(cat "$VSCODE_EDITOR_DATA_JSON")
+	else
+		echo "  ⚠️  vscode-editor/data.json の JSON が不正です。初期化して続行します"
+	fi
+fi
+# extensions が未設定の場合はデフォルト＋sh を設定、設定済みの場合は sh を追加
+echo "$existing_vscode" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+default_ext = ['ts','js','py','css','c','cpp','go','rs','java','lua','php','cs','sh']
+exts = data.get('extensions', default_ext)
+if 'sh' not in exts:
+    exts.append('sh')
+data['extensions'] = exts
+# デフォルト設定がない場合は補完
+data.setdefault('folding', True)
+data.setdefault('lineNumbers', True)
+data.setdefault('wordWrap', True)
+data.setdefault('minimap', True)
+data.setdefault('themeColor', 'AUTO')
+data.setdefault('fontSize', 14)
+print(json.dumps(data, indent=2, ensure_ascii=False))
+" >"$VSCODE_EDITOR_DATA_JSON"
+echo "  ✅ vscode-editor/data.json (対応拡張子: sh 追加)"
 
 echo "$new_list" | jq '.' >"$COMMUNITY_PLUGINS_JSON"
 echo "  ✅ $COMMUNITY_PLUGINS_JSON を更新しました"
