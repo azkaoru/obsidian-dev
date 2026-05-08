@@ -57,7 +57,7 @@ if [ -z "${OBSIDIAN_API_KEY:-}" ]; then
 	exit 1
 fi
 API_KEY="$OBSIDIAN_API_KEY"
-BASE_URL="https://127.0.0.1:27124"
+BASE_URL="https://localhost:27124"
 SRC_PATH="agentTasks/todo/${MONTH_DIR}/${FILENAME}"
 DST_PATH="agentTasks/done/${MONTH_DIR}/${FILENAME}"
 CURRENT_DATE=$(date +%Y-%m-%d)
@@ -74,8 +74,13 @@ echo ""
 # ───────────────────────────────────────────────
 # REST API ヘルパー関数
 # ───────────────────────────────────────────────
+url_encode() {
+	python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$1"
+}
+
 api_get_markdown() {
-	local path="$1"
+	local path
+	path=$(url_encode "$1")
 	curl -sk \
 		-H "Authorization: Bearer $API_KEY" \
 		-H "Accept: text/markdown" \
@@ -83,7 +88,8 @@ api_get_markdown() {
 }
 
 api_put() {
-	local path="$1"
+	local path
+	path=$(url_encode "$1")
 	local body="$2"
 	local content_type="${3:-text/plain}"
 	curl -sk -o /dev/null -w "%{http_code}" \
@@ -95,7 +101,8 @@ api_put() {
 }
 
 api_delete() {
-	local path="$1"
+	local path
+	path=$(url_encode "$1")
 	curl -sk -o /dev/null -w "%{http_code}" \
 		-X DELETE \
 		-H "Authorization: Bearer $API_KEY" \
@@ -116,6 +123,28 @@ fi
 echo "  ✅ タスク取得完了"
 
 # ───────────────────────────────────────────────
+# 1b. frontmatter の sources: フィールドを解析
+# ───────────────────────────────────────────────
+SOURCE_VAULT_PATHS=()
+while IFS= read -r src; do
+	[[ -n "$src" ]] && SOURCE_VAULT_PATHS+=("$src")
+done < <(echo "$content" | python3 -c "
+import sys, re
+text = sys.stdin.read()
+fm = re.match(r'^---\n(.*?)\n---', text, re.DOTALL)
+if fm:
+    m = re.search(r'^sources:\s*\n((?:[ \t]+-[ \t]+\S.*\n?)*)', fm.group(1), re.MULTILINE)
+    if m:
+        for line in m.group(1).splitlines():
+            s = re.sub(r'^\s+-\s+', '', line).strip()
+            if s: print(s)
+")
+
+if [ ${#SOURCE_VAULT_PATHS[@]} -gt 0 ]; then
+	echo "  📎 ソースファイル: ${SOURCE_VAULT_PATHS[*]}"
+fi
+
+# ───────────────────────────────────────────────
 # 2. 成果物を _ai_working/ から ai_outputs/ にコピーして _ai_working/ から削除
 # ───────────────────────────────────────────────
 UPLOADED_NAMES=()
@@ -132,7 +161,7 @@ if [ ${#OUTPUT_VAULT_PATHS[@]} -gt 0 ]; then
 		file_content=$(curl -sk \
 			-H "Authorization: Bearer $API_KEY" \
 			-H "Accept: text/plain" \
-			"${BASE_URL}/vault/${vault_src_path}")
+			"${BASE_URL}/vault/$(url_encode "${vault_src_path}")")
 
 		if [ -z "$file_content" ]; then
 			echo "  ⚠️  vault 内にファイルが見つかりません。スキップします: ${vault_src_path}"
@@ -155,6 +184,45 @@ if [ ${#OUTPUT_VAULT_PATHS[@]} -gt 0 ]; then
 			fi
 		else
 			echo "  ❌ コピー失敗: ${output_filename} (HTTP ${http_code})"
+		fi
+	done
+fi
+
+# ───────────────────────────────────────────────
+# 2b. sources: ファイルを todo/ から ai_outputs/ にコピーして削除
+# ───────────────────────────────────────────────
+if [ ${#SOURCE_VAULT_PATHS[@]} -gt 0 ]; then
+	echo ""
+	echo "▶ ソースファイルを ai_outputs/ にコピー中 (${OUTPUTS_DIR}/)..."
+
+	for vault_src_path in "${SOURCE_VAULT_PATHS[@]}"; do
+		src_filename=$(basename "$vault_src_path")
+		vault_dst_path="${OUTPUTS_DIR}/${src_filename}"
+
+		file_content=$(curl -sk \
+			-H "Authorization: Bearer $API_KEY" \
+			-H "Accept: text/plain" \
+			"${BASE_URL}/vault/$(url_encode "${vault_src_path}")")
+
+		if [ -z "$file_content" ]; then
+			echo "  ⚠️  vault 内にファイルが見つかりません。スキップします: ${vault_src_path}"
+			continue
+		fi
+
+		http_code=$(api_put "$vault_dst_path" "$file_content" "text/plain")
+
+		if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+			echo "  ✅ コピー完了: ${src_filename} → ${vault_dst_path} (HTTP ${http_code})"
+			UPLOADED_NAMES+=("$src_filename")
+
+			del_code=$(api_delete "$vault_src_path")
+			if [ "$del_code" -ge 200 ] && [ "$del_code" -lt 300 ]; then
+				echo "  🗑️  削除完了: ${vault_src_path} (HTTP ${del_code})"
+			else
+				echo "  ⚠️  削除に失敗しました (HTTP ${del_code}): ${vault_src_path}"
+			fi
+		else
+			echo "  ❌ コピー失敗: ${src_filename} (HTTP ${http_code})"
 		fi
 	done
 fi

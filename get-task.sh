@@ -25,7 +25,7 @@ if [ -z "${OBSIDIAN_API_KEY:-}" ]; then
 	exit 1
 fi
 API_KEY="$OBSIDIAN_API_KEY"
-BASE_URL="https://127.0.0.1:27124"
+BASE_URL="https://localhost:27124"
 TASK_DIR="agentTasks/todo"
 
 # ───────────────────────────────────────────────
@@ -41,8 +41,13 @@ done
 # ───────────────────────────────────────────────
 # REST API ヘルパー関数
 # ───────────────────────────────────────────────
+url_encode() {
+	python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "$1"
+}
+
 api_get_json() {
-	local path="$1"
+	local path
+	path=$(url_encode "$1")
 	curl -sk \
 		-H "Authorization: Bearer $API_KEY" \
 		-H "Accept: application/json" \
@@ -50,7 +55,8 @@ api_get_json() {
 }
 
 api_get_markdown() {
-	local path="$1"
+	local path
+	path=$(url_encode "$1")
 	curl -sk \
 		-H "Authorization: Bearer $API_KEY" \
 		-H "Accept: text/markdown" \

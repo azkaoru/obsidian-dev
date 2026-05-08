@@ -192,51 +192,6 @@ echo "$existing_tmpl" | jq '. + {
 echo "  ✅ templates.json (Templates 設定)"
 
 
-# quickadd の data.json — 新規タスク作成マクロを登録
-QUICKADD_DATA_JSON="$PLUGINS_DIR/quickadd/data.json"
-if [ -f "$QUICKADD_DATA_JSON" ]; then
-	if jq -e . "$QUICKADD_DATA_JSON" &>/dev/null; then
-		# 「新規タスク」チョイスが未登録なら追加、登録済みなら folder/fileNameFormat を最新化
-		already_exists=$(jq -r '[.choices[] | select(.name == "新規タスク")] | length' "$QUICKADD_DATA_JSON" 2>/dev/null || echo "0")
-		NEW_TASK_ENTRY='{
-          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-          "name": "新規タスク",
-          "type": "Template",
-          "command": true,
-          "useTemplater": true,
-          "templatePath": "_templates/TaskTemplate.md",
-          "fileNameFormat": {
-            "enabled": true,
-            "format": "{{NAME}}"
-          },
-          "folder": {
-            "enabled": true,
-            "folders": ["agentTasks/todo/{{DATE:YYYY-MM}}"],
-            "chooseWhenCreatingNote": false
-          },
-          "openFile": true,
-          "openFileInMode": "default",
-          "setFileExistsBehavior": false,
-          "fileExistsMode": "Increment the file name"
-        }'
-		if [ "$already_exists" -eq 0 ]; then
-			jq --argjson entry "$NEW_TASK_ENTRY" '.choices += [$entry]' \
-				"$QUICKADD_DATA_JSON" >"$QUICKADD_DATA_JSON.tmp" && mv "$QUICKADD_DATA_JSON.tmp" "$QUICKADD_DATA_JSON"
-			echo "  ✅ quickadd/data.json に「新規タスク」マクロを登録しました"
-		else
-			# 既存エントリの folder と fileNameFormat を更新
-			jq --argjson entry "$NEW_TASK_ENTRY" \
-				'(.choices[] | select(.name == "新規タスク")) |= $entry' \
-				"$QUICKADD_DATA_JSON" >"$QUICKADD_DATA_JSON.tmp" && mv "$QUICKADD_DATA_JSON.tmp" "$QUICKADD_DATA_JSON"
-			echo "  ✅ quickadd/data.json の「新規タスク」マクロを最新化しました"
-		fi
-	else
-		echo "  ⚠️  quickadd/data.json の JSON が不正です。スキップします"
-	fi
-else
-	echo "  ⚠️  quickadd/data.json が見つかりません。QuickAdd プラグインのインストール後に再実行してください"
-fi
-
 echo "========================================"
 echo " Obsidian プラグインセットアップ開始"
 echo " ボルト: $VAULT_DIR"
@@ -392,6 +347,60 @@ data.setdefault('fontSize', 14)
 print(json.dumps(data, indent=2, ensure_ascii=False))
 " >"$VSCODE_EDITOR_DATA_JSON"
 echo "  ✅ vscode-editor/data.json (対応拡張子: sh 追加)"
+
+# quickadd の data.json — 新規タスク作成マクロを登録
+QUICKADD_DATA_JSON="$PLUGINS_DIR/quickadd/data.json"
+mkdir -p "$PLUGINS_DIR/quickadd"
+# data.json が存在しない、または空の場合は初期構造を作成
+if [ ! -f "$QUICKADD_DATA_JSON" ] || ! jq -e . "$QUICKADD_DATA_JSON" &>/dev/null; then
+	cat >"$QUICKADD_DATA_JSON" <<'QAJSON'
+{
+  "choices": [],
+  "macros": [],
+  "templateFolderPath": "",
+  "inputPrompt": "single-line-modal",
+  "devMode": false,
+  "templateEngine": "obsidian",
+  "scriptEngine": "dataviewjs",
+  "announceUpdates": true,
+  "version": "1.0.0"
+}
+QAJSON
+	echo "  ✅ quickadd/data.json を初期化しました"
+fi
+
+NEW_TASK_ENTRY='{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "新規タスク",
+  "type": "Template",
+  "command": true,
+  "useTemplater": true,
+  "templatePath": "_templates/TaskTemplate.md",
+  "fileNameFormat": {
+    "enabled": true,
+    "format": "{{NAME}}"
+  },
+  "folder": {
+    "enabled": true,
+    "folders": ["agentTasks/todo/{{DATE:YYYY-MM}}"],
+    "chooseWhenCreatingNote": false
+  },
+  "openFile": true,
+  "openFileInMode": "default",
+  "setFileExistsBehavior": false,
+  "fileExistsMode": "Increment the file name"
+}'
+already_exists=$(jq -r '[.choices[] | select(.name == "新規タスク")] | length' "$QUICKADD_DATA_JSON" 2>/dev/null || echo "0")
+if [ "$already_exists" -eq 0 ]; then
+	jq --argjson entry "$NEW_TASK_ENTRY" '.choices += [$entry]' \
+		"$QUICKADD_DATA_JSON" >"$QUICKADD_DATA_JSON.tmp" && mv "$QUICKADD_DATA_JSON.tmp" "$QUICKADD_DATA_JSON"
+	echo "  ✅ quickadd/data.json に「新規タスク」マクロを登録しました"
+else
+	jq --argjson entry "$NEW_TASK_ENTRY" \
+		'(.choices[] | select(.name == "新規タスク")) |= $entry' \
+		"$QUICKADD_DATA_JSON" >"$QUICKADD_DATA_JSON.tmp" && mv "$QUICKADD_DATA_JSON.tmp" "$QUICKADD_DATA_JSON"
+	echo "  ✅ quickadd/data.json の「新規タスク」マクロを最新化しました"
+fi
 
 echo "$new_list" | jq '.' >"$COMMUNITY_PLUGINS_JSON"
 echo "  ✅ $COMMUNITY_PLUGINS_JSON を更新しました"

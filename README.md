@@ -152,6 +152,108 @@ ObsidianNotes/
 
 ---
 
+## タスクファイルのフォーマット
+
+`agentTasks/todo/<yyyy-mm>/` に置くタスクファイルは以下の frontmatter を持ちます。
+
+```markdown
+---
+status: todo          # todo / in_progress / done
+priority: high        # high / medium / low
+created: 2026-05-08
+sources:
+  - agentTasks/todo/2026-05/input-data.csv
+  - agentTasks/todo/2026-05/spec.md
+---
+
+# タスクタイトル
+
+## 内容
+タスクの説明
+
+## プロンプト
+AIエージェントへの具体的な指示
+```
+
+### frontmatter フィールド一覧
+
+| フィールド | 必須 | 説明 |
+|---|---|---|
+| `status` | ○ | タスクの状態。`todo` / `in_progress` / `done` のいずれか |
+| `priority` | ○ | 優先度。`high` / `medium` / `low` のいずれか（`get-task.sh` の表示順に影響） |
+| `created` | ○ | タスク作成日（`YYYY-MM-DD` 形式） |
+| `sources` | - | AIエージェントに渡す入力ファイルの vault 内パスのリスト |
+
+### `sources:` フィールドの動作
+
+`sources:` には、タスクの入力として使う既存ファイル（CSV・仕様書・参考資料など）の vault 内パスをリストで指定します。
+
+```yaml
+sources:
+  - agentTasks/todo/2026-05/input-data.csv
+  - agentTasks/todo/2026-05/spec.md
+```
+
+`complete-task.sh` を実行すると、`sources:` に列挙されたファイルは以下のように自動処理されます。
+
+1. `agentTasks/ai_outputs/<yyyy-mm-dd>/` にコピーされる
+2. 元のパスから削除される
+3. タスクファイルの `## 成果物` セクションに `[[ファイル名]]` リンクが追記される
+
+これにより、タスク完了後は入力ファイルも成果物と同じ場所にまとめて保存され、Obsidian の `[[リンク]]` からアクセスできます。
+
+---
+
+## AIエージェントのタスク実行フロー
+
+```
+1. Obsidian でタスクファイルを agentTasks/todo/<yyyy-mm>/ に作成
+        ↓
+2. bash get-task.sh
+   → todo フォルダのタスクを優先度順に表示
+        ↓
+3. AIエージェントがタスクを実施
+   → 成果物は REST API PUT で agentTasks/_ai_working/<yyyy-mm-dd>/ に保存
+        ↓
+4. bash complete-task.sh <yyyy-mm/ファイル名> [成果物のvault内パス ...]
+   → sources: ファイルと成果物を agentTasks/ai_outputs/<yyyy-mm-dd>/ にコピー
+   → 元ファイルを削除
+   → status を done に更新
+   → タスクファイルに ## 成果物 [[リンク]] を追記
+   → タスクを agentTasks/done/<yyyy-mm>/ に移動
+```
+
+### `get-task.sh` の出力例
+
+```
+========================================
+タスクファイル: agentTasks/todo/2026-05/r8-ai-0508-analysis.md
+タイトル:       データ分析レポート作成
+優先度:         high
+作成日:         2026-05-08
+========================================
+
+## 内容
+...
+
+## プロンプト
+...
+```
+
+### `complete-task.sh` の使い方
+
+```bash
+# 成果物なし
+bash complete-task.sh 2026-05/r8-ai-0508-analysis.md
+
+# 成果物あり（AIエージェントが _ai_working/ に保存したファイルを指定）
+bash complete-task.sh 2026-05/r8-ai-0508-analysis.md \
+  agentTasks/_ai_working/2026-05-08/report.md \
+  agentTasks/_ai_working/2026-05-08/chart.png
+```
+
+---
+
 ## おすすめプラグインのセットアップ
 
 以下のスクリプトを実行すると、AIエージェントのタスク管理に適した推奨プラグインを自動でインストール・有効化します。
@@ -209,9 +311,17 @@ AIエージェントへのタスク管理に特化した以下のプラグイン
 
 利用する際はdoc配下のmdファイルに詳細を記載しているため、vaultにこのプロジェクトのdocを_docでコピーして利用する。
 
+### ワークフロードキュメント
+
+| ドキュメント | 内容 |
+|---|---|
+| [docs/workflow.md](docs/workflow.md) | opencode を使ったタスク管理ワークフロー |
+| [docs/workflow_claude.md](docs/workflow_claude.md) | Claude Code を使ったタスク管理ワークフロー |
+
 
 ```
 cp -r docs  <path-to-your-vault>/_doc>
+cp *-task.sh <path-to-your-vault>
 ```
 
 
